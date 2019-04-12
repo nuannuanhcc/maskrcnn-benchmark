@@ -1,8 +1,11 @@
 from maskrcnn_benchmark.data import datasets
+from maskrcnn_benchmark.data.datasets.evaluation import sysu
+from maskrcnn_benchmark.data.datasets.evaluation import prw
 
 from .coco import coco_evaluation
 from .voc import voc_evaluation
-
+from .sysu import sysu_evaluation
+from .prw import prw_evaluation
 
 def evaluate(dataset, predictions, output_folder, **kwargs):
     """evaluate dataset using different methods based on dataset type.
@@ -22,6 +25,10 @@ def evaluate(dataset, predictions, output_folder, **kwargs):
         return coco_evaluation(**args)
     elif isinstance(dataset, datasets.PascalVOCDataset):
         return voc_evaluation(**args)
+    elif isinstance(dataset, datasets.SYSUDataset):
+        return sysu_evaluation(**args)
+    elif isinstance(dataset, datasets.PRWDataset):
+        return prw_evaluation(**args)
     else:
         dataset_name = dataset.__class__.__name__
         raise NotImplementedError("Unsupported dataset type {}.".format(dataset_name))

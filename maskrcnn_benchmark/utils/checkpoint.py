@@ -49,10 +49,13 @@ class Checkpointer(object):
         torch.save(data, save_file)
         self.tag_last_checkpoint(save_file)
 
-    def load(self, f=None):
-        if self.has_checkpoint():
-            # override argument with existing checkpoint
-            f = self.get_checkpoint_file()
+    def load(self, f=None, pmodel=None):
+        if pmodel:
+            f = pmodel
+        else:
+            if self.has_checkpoint():
+                # override argument with existing checkpoint
+                f = self.get_checkpoint_file()
         if not f:
             # no checkpoint could be found
             self.logger.info("No checkpoint found. Initializing model from scratch")
@@ -92,7 +95,7 @@ class Checkpointer(object):
             f.write(last_filename)
 
     def _load_file(self, f):
-        return torch.load(f, map_location=torch.device("cpu"))
+        return torch.load(f, map_location=torch.device("cpu"),)
 
     def _load_model(self, checkpoint):
         load_state_dict(self.model, checkpoint.pop("model"))

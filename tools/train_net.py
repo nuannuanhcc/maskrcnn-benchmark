@@ -44,7 +44,8 @@ def train(cfg, local_rank, distributed):
     arguments = {}
     arguments["iteration"] = 0
 
-    output_dir = cfg.OUTPUT_DIR
+    num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
+    output_dir = os.path.join(cfg.OUTPUT_DIR, cfg.SUBDIR, 'GPU' + str(num_gpus) + '_LR' + str(cfg.SOLVER.BASE_LR))
 
     save_to_disk = get_rank() == 0
     checkpointer = DetectronCheckpointer(
@@ -87,6 +88,10 @@ def run_test(cfg, model, distributed):
         iou_types = iou_types + ("keypoints",)
     output_folders = [None] * len(cfg.DATASETS.TEST)
     dataset_names = cfg.DATASETS.TEST
+
+    num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1  ###
+    output_dir = os.path.join(cfg.OUTPUT_DIR, cfg.SUBDIR, 'GPU' + str(num_gpus) + '_LR' + str(cfg.SOLVER.BASE_LR))  ###
+
     if cfg.OUTPUT_DIR:
         for idx, dataset_name in enumerate(dataset_names):
             output_folder = os.path.join(cfg.OUTPUT_DIR, "inference", dataset_name)
@@ -147,7 +152,7 @@ def main():
     cfg.merge_from_list(args.opts)
     cfg.freeze()
 
-    output_dir = cfg.OUTPUT_DIR
+    output_dir = os.path.join(cfg.OUTPUT_DIR, cfg.SUBDIR, 'GPU' + str(num_gpus) + '_LR' + str(cfg.SOLVER.BASE_LR))
     if output_dir:
         mkdir(output_dir)
 
