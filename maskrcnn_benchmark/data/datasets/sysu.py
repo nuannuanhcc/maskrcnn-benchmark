@@ -12,17 +12,15 @@ import torch
 import torchvision
 
 from maskrcnn_benchmark.structures.bounding_box import BoxList
-
+from maskrcnn_benchmark.config import cfg
 
 class SYSUDataset(torch.utils.data.Dataset):
 
     CLASSES = ("__background__ ", 'person') ###
 
-    def __init__(self, root, ann_file, split, mode='test', transforms=None):
+    def __init__(self, root, ann_file, split, transforms=None):
 
-        self.mode = mode
-        assert self.mode == 'test', "{} mode error!".format(self.mode)
-
+        self.gallery_size = cfg.REID.TEST.GALLERY_SIZE
         self.root = root
         self.anno = ann_file
         self.split = split
@@ -31,9 +29,15 @@ class SYSUDataset(torch.utils.data.Dataset):
         self.anno_dir = '/home/hanchuchu/maskrcnn-benchmark/datasets/sysu/annotations'
         self.train_DF = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/trainAllDF.csv'
         self.test_DF = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/testAllDF.csv'
-        self.demo = False  ###############
+        self.query_DF = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/queryDF.csv'
+        self.gallery = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/q_to_g{}DF.csv'.format(self.gallery_size)
+        self.demo = False
         if self.demo:
-            self.ids = ['s15539.jpg']
+            self.pid = 'pid_0.csv'
+            self.pid_file = os.path.join(self.anno_dir, 'pids', self.pid)
+            query_box = pd.read_csv(self.pid_file)
+            imname = query_box['imname']
+            self.ids = np.array(imname.squeeze()).tolist() # 's15533.jpg'
         else:
             with open(self.anno) as json_anno:
                 anno_dict = json.load(json_anno)
@@ -46,11 +50,10 @@ class SYSUDataset(torch.utils.data.Dataset):
 
         if self.split == 'train' or self.split == 'val':
             self.all_boxes = pd.read_csv(self.train_DF)
-        elif self.split == 'test':
+        if self.split == 'test':
             self.all_boxes = pd.read_csv(self.test_DF)
-        else:
-            raise(KeyError(self.split))
-
+        if self.split == 'query':
+            self.all_boxes = pd.read_csv(self.query_DF)
     # as you would do normally
 
     def __getitem__(self, index):
@@ -74,7 +77,10 @@ class SYSUDataset(torch.utils.data.Dataset):
     def get_groundtruth(self, index):
         img_id = self.ids[index]
         img_num = img_id.split('.')[0][1:]
-        boxes_df = self.all_boxes.query('imname==@img_id')
+        if self.split == 'query':
+            boxes_df = self.all_boxes.query('pid==@index')
+        else:
+            boxes_df = self.all_boxes.query('imname==@img_id')
         boxes = boxes_df.loc[:, 'x1': 'pid'].copy()
         #boxes = boxes_df.copy()
         boxes.loc[:, 'del_x'] += boxes.loc[:, 'x1']

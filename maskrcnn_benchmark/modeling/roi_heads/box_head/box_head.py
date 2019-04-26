@@ -47,7 +47,9 @@ class ROIBoxHead(torch.nn.Module):
         x = self.feature_extractor(features, proposals)
         # final classifier that converts the features into predictions
         class_logits, box_regression = self.predictor(x)
-
+        # obtain the prediction for reid
+        if self.training:
+            pre_result = self.post_processor((class_logits, box_regression), proposals)
         if not self.training:
             result = self.post_processor((class_logits, box_regression), proposals)
             return x, result, {}
@@ -57,7 +59,7 @@ class ROIBoxHead(torch.nn.Module):
         )
         return (
             x,
-            proposals,
+            pre_result,  # change a value
             dict(loss_classifier=loss_classifier, loss_box_reg=loss_box_reg),
         )
 

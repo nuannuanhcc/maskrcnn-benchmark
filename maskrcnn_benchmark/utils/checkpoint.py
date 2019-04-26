@@ -49,17 +49,15 @@ class Checkpointer(object):
         torch.save(data, save_file)
         self.tag_last_checkpoint(save_file)
 
-    def load(self, f=None, pmodel=None):
-        if pmodel:
-            f = pmodel
-        else:
+    def load(self, f=None):
+        if not f:
             if self.has_checkpoint():
                 # override argument with existing checkpoint
                 f = self.get_checkpoint_file()
-        if not f:
-            # no checkpoint could be found
-            self.logger.info("No checkpoint found. Initializing model from scratch")
-            return {}
+            else:
+                # no checkpoint could be found
+                self.logger.info("No checkpoint found. Initializing model from scratch")
+                return {}
         self.logger.info("Loading checkpoint from {}".format(f))
         checkpoint = self._load_file(f)
         self._load_model(checkpoint)

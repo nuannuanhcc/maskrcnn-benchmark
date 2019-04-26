@@ -24,12 +24,18 @@ from maskrcnn_benchmark.utils.comm import synchronize, get_rank
 from maskrcnn_benchmark.utils.imports import import_file
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
+from maskrcnn_benchmark.modeling.reid_backbone import build_reid_model
 
 
 def train(cfg, local_rank, distributed):
     model = build_detection_model(cfg)
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
+
+    # load a reid model
+    reid_model = build_reid_model(cfg)
+    reid_model.load_state_dict(torch.load(cfg.REID.TEST.WEIGHT), strict=False)
+    reid_model.to(device)
 
     optimizer = make_optimizer(cfg, model)
     scheduler = make_lr_scheduler(cfg, optimizer)
@@ -64,6 +70,7 @@ def train(cfg, local_rank, distributed):
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
 
     do_train(
+        reid_model,
         model,
         data_loader,
         optimizer,

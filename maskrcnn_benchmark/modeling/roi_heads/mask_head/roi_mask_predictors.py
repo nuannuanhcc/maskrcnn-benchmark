@@ -7,7 +7,7 @@ from maskrcnn_benchmark.layers import ConvTranspose2d
 from maskrcnn_benchmark.modeling import registry
 
 
-@registry.ROI_MASK_PREDICTOR.register("MaskRCNNC4Predictor")
+@registry.ROI_MASK_PREDICTOR.register("MaskRCNNC4Predictor") # this
 class MaskRCNNC4Predictor(nn.Module):
     def __init__(self, cfg, in_channels):
         super(MaskRCNNC4Predictor, self).__init__()
@@ -16,7 +16,7 @@ class MaskRCNNC4Predictor(nn.Module):
         num_inputs = in_channels
 
         self.conv5_mask = ConvTranspose2d(num_inputs, dim_reduced, 2, 2, 0)
-        self.mask_fcn_logits = Conv2d(dim_reduced, num_classes, 1, 1, 0)
+        self.mask_fcn_logits = Conv2d(dim_reduced, num_classes, 1, 1, 0)  # 256=>81
 
         for name, param in self.named_parameters():
             if "bias" in name:
@@ -26,9 +26,9 @@ class MaskRCNNC4Predictor(nn.Module):
                 # corresponds to kaiming_normal_ in PyTorch
                 nn.init.kaiming_normal_(param, mode="fan_out", nonlinearity="relu")
 
-    def forward(self, x):
-        x = F.relu(self.conv5_mask(x))
-        return self.mask_fcn_logits(x)
+    def forward(self, x):  #  [149, 256, 14, 14])
+        x = F.relu(self.conv5_mask(x))  #  ConvTranspose2d  [149, 256, 28, 28]
+        return self.mask_fcn_logits(x)  #  [149, 81, 28, 28]
 
 
 @registry.ROI_MASK_PREDICTOR.register("MaskRCNNConv1x1Predictor")

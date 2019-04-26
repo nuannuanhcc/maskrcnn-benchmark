@@ -410,7 +410,7 @@ _C.TEST.EXPECTED_RESULTS_SIGMA_TOL = 4
 # Number of images per batch
 # This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
 # see 2 images per batch
-_C.TEST.IMS_PER_BATCH = 8
+_C.TEST.IMS_PER_BATCH = 1
 # Number of detections per image
 _C.TEST.DETECTIONS_PER_IMG = 100
 
@@ -421,3 +421,132 @@ _C.TEST.DETECTIONS_PER_IMG = 100
 _C.OUTPUT_DIR = "/unsullied/sharefs/hanchuchu/isilon-home/train_log"
 _C.SUBDIR = "default"
 _C.PATHS_CATALOG = os.path.join(os.path.dirname(__file__), "paths_catalog.py")
+_C.CIRCLE = False
+# ---------------------------------------------------------------------------- #
+# reid options
+# ---------------------------------------------------------------------------- #
+#_C.REID = CN()
+#_C.REID.HEIGHT_SIZE = 384
+#_C.REID.WIDTH_SIZE = 128
+#_C.REID.USE_RESNET = True
+
+
+#_C.SUPERVISE_ON = True
+#_C.MODEL.FINETUNE = True
+
+
+# -----------------------------------------------------------------------------
+# Config definition
+# -----------------------------------------------------------------------------
+
+_C.REID = CN()
+
+_C.REID.MODEL = CN()
+_C.REID.MODEL.DEVICE = "cuda"
+_C.REID.MODEL.NAME = 'resnet50'
+_C.REID.MODEL.LAST_STRIDE = 1
+_C.REID.MODEL.PRETRAIN_PATH = ''
+# -----------------------------------------------------------------------------
+# INPUT
+# -----------------------------------------------------------------------------
+_C.REID.INPUT = CN()
+# Size of the image during training
+_C.REID.INPUT.SIZE_TRAIN = [384, 128]
+# Size of the image during test
+_C.REID.INPUT.SIZE_TEST = [384, 128]
+# Random probability for image horizontal flip
+_C.REID.INPUT.PROB = 0.5
+# Values to be used for image normalization
+_C.REID.INPUT.PIXEL_MEAN = [0.485, 0.456, 0.406]
+# _C.REID.INPUT.PIXEL_MEAN = [0.406, 0.456, 0.485]
+#_C.INPUT.PIXEL_MEAN = [122.7717, 115.9465, 102.9801] #
+# Values to be used for image normalization
+_C.REID.INPUT.PIXEL_STD = [0.229, 0.224, 0.225]
+# _C.REID.INPUT.PIXEL_STD = [0.225, 0.224, 0.229]
+#_C.INPUT.PIXEL_STD = [1., 1., 1.] #
+# Convert image to BGR format (for Caffe2 models), in range 0-255
+_C.REID.INPUT.TO_BGR255 = False
+# Value of padding size
+_C.REID.INPUT.PADDING = 10
+
+
+
+# -----------------------------------------------------------------------------
+# Dataset
+# -----------------------------------------------------------------------------
+_C.REID.DATASETS = CN()
+# List of the dataset names for training, as present in paths_catalog.py
+#_C.DATASETS.NAMES = ('market1501')
+_C.REID.DATASETS.NAMES = ('sysu')
+_C.REID.DATASETS.ID_NUM = 10000
+# -----------------------------------------------------------------------------
+# DataLoader
+# -----------------------------------------------------------------------------
+_C.REID.DATALOADER = CN()
+# Number of data loading threads
+_C.REID.DATALOADER.NUM_WORKERS = 8
+# Sampler for data loading
+_C.REID.DATALOADER.SAMPLER = ['softmax']
+# Number of instance for one batch
+_C.REID.DATALOADER.NUM_INSTANCE = 16
+
+# ---------------------------------------------------------------------------- #
+# Solver
+# ---------------------------------------------------------------------------- #
+_C.REID.SOLVER = CN()
+_C.REID.SOLVER.OPTIMIZER_NAME = "Adam"
+
+_C.REID.SOLVER.MAX_EPOCHS = 50
+
+_C.REID.SOLVER.BASE_LR = 3e-4
+_C.REID.SOLVER.BIAS_LR_FACTOR = 2
+
+_C.REID.SOLVER.MOMENTUM = 0.9
+
+_C.REID.SOLVER.MARGIN = 0.3
+
+_C.REID.SOLVER.WEIGHT_DECAY = 0.0005
+_C.REID.SOLVER.WEIGHT_DECAY_BIAS = 0.
+
+_C.REID.SOLVER.GAMMA = 0.1
+_C.REID.SOLVER.STEPS = (30, 55)
+
+_C.REID.SOLVER.WARMUP_FACTOR = 1.0 / 3
+_C.REID.SOLVER.WARMUP_ITERS = 500
+_C.REID.SOLVER.WARMUP_METHOD = "linear"
+
+_C.REID.SOLVER.CHECKPOINT_PERIOD = 50
+_C.REID.SOLVER.LOG_PERIOD = 100
+_C.REID.SOLVER.EVAL_PERIOD = 50
+# Number of images per batch
+# This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
+# see 2 images per batch
+_C.REID.SOLVER.IMS_PER_BATCH = 64
+
+
+# This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
+# see 2 images per batch
+_C.REID.TEST = CN()
+_C.REID.TEST.IMS_PER_BATCH = 128
+_C.REID.TEST.WEIGHT = ""
+_C.REID.TEST.GALLERY_SIZE = 100
+# ---------------------------------------------------------------------------- #
+# Misc options
+# ---------------------------------------------------------------------------- #
+_C.REID.OUTPUT_DIR = ""
+_C.REID.DATASET_DIR = '/unsullied/sharefs/yejiacheng/isilon-home/pytorch/dataset/person_search/coco_format_sysu/reid/sysu'
+
+_C.REID.USE_FOCALLOSS = False
+
+_C.REID.ALPHA = []
+_C.REID.GAMMA = 2
+_C.REID.SIZE_AVERAGE = True
+
+
+
+
+# ---------------------------------------------------------------------------- #
+# Triplet Loss options
+# ---------------------------------------------------------------------------- #
+_C.TRIPLET = CN()
+_C.TRIPLET.MARGIN = 0.5

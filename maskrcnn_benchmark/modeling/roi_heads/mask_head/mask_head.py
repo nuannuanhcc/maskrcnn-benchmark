@@ -60,24 +60,34 @@ class ROIMaskHead(torch.nn.Module):
         """
 
         if self.training:
-            # during training, only focus on positive boxes
-            all_proposals = proposals
-            proposals, positive_inds = keep_only_positive_boxes(proposals)
-        if self.training and self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
-            x = features
-            x = x[torch.cat(positive_inds, dim=0)]
+            x = self.feature_extractor(features, proposals)  # torch.Size([1223, 256, 14, 14])
+            mask_logits = self.predictor(x)  # torch.Size([1223, 81, 28, 28])
+            result = self.post_processor(mask_logits, proposals)  # result[0].extra_fields['mask'].shape [39, 1, 28, 28]
+            return x, result, {}
         else:
-            x = self.feature_extractor(features, proposals)
-        mask_logits = self.predictor(x)
-
-        if not self.training:
-            result = self.post_processor(mask_logits, proposals)
+            x = self.feature_extractor(features, proposals)  # torch.Size([1223, 256, 14, 14])
+            mask_logits = self.predictor(x)  # torch.Size([1223, 81, 28, 28])
+            result = self.post_processor(mask_logits, proposals)  # result[0].extra_fields['mask'].shape [39, 1, 28, 28]
             return x, result, {}
 
-        loss_mask = self.loss_evaluator(proposals, mask_logits, targets)
-
-        return x, all_proposals, dict(loss_mask=loss_mask)
-
+        # if self.training:
+        #     # during training, only focus on positive boxes
+        #     all_proposals = proposals
+        #     proposals, positive_inds = keep_only_positive_boxes(proposals)
+        # if self.training and self.cfg.MODEL.ROI_MASK_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
+        #     x = features
+        #     x = x[torch.cat(positive_inds, dim=0)]
+        # else:
+        #     x = self.feature_extractor(features, proposals)
+        # mask_logits = self.predictor(x)
+        #
+        # if not self.training:
+        #     result = self.post_processor(mask_logits, proposals)
+        #     return x, result, {}
+        #
+        # loss_mask = self.loss_evaluator(proposals, mask_logits, targets)
+        #
+        # return x, all_proposals, dict(loss_mask=loss_mask)
 
 def build_roi_mask_head(cfg, in_channels):
     return ROIMaskHead(cfg, in_channels)

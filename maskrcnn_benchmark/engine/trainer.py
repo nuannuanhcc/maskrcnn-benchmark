@@ -8,6 +8,7 @@ import torch.distributed as dist
 
 from maskrcnn_benchmark.utils.comm import get_world_size
 from maskrcnn_benchmark.utils.metric_logger import MetricLogger
+from maskrcnn_benchmark.structures.image_list import resize_to_image
 
 
 def reduce_loss_dict(loss_dict):
@@ -36,6 +37,7 @@ def reduce_loss_dict(loss_dict):
 
 
 def do_train(
+    reid_model,
     model,
     data_loader,
     optimizer,
@@ -51,6 +53,7 @@ def do_train(
     max_iter = len(data_loader)
     start_iter = arguments["iteration"]
     model.train()
+    reid_model.eval()
     start_training_time = time.time()
     end = time.time()
     for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
@@ -62,13 +65,22 @@ def do_train(
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
+        result, loss_dict = model(images, targets)
+        images_reid, labels_reid = resize_to_image(images.tensors, targets, result)
+        if images_reid is None:
+            reid_loss_dict = {}  # no distributed
+            print(iteration)
+            # continue # distributed
+        else:
+            images_reid = [o.to(device) for o in images_reid]
+            labels_reid = labels_reid.to(device)
+            reid_loss_dict = reid_model(images_reid, labels_reid, iteration, 'train')
 
-        loss_dict = model(images, targets)
-
-        losses = sum(loss for loss in loss_dict.values())
+        losses = sum(loss for loss in loss_dict.values()) + sum(loss for loss in reid_loss_dict.values())
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = reduce_loss_dict(loss_dict)
+        loss_dict_reduced.update(reduce_loss_dict(reid_loss_dict))
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
         meters.update(loss=losses_reduced, **loss_dict_reduced)
 

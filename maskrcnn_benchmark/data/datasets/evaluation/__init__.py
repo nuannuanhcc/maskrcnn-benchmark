@@ -29,6 +29,10 @@ def evaluate(dataset, predictions, output_folder, **kwargs):
         return sysu_evaluation(**args)
     elif isinstance(dataset, datasets.PRWDataset):
         return prw_evaluation(**args)
+    elif isinstance(dataset, (list, tuple)) and isinstance(dataset[0], datasets.SYSUDataset):
+        return sysu_evaluation(**args)
+    elif isinstance(dataset, (list, tuple)) and isinstance(dataset[0], datasets.PRWDataset):
+        return prw_evaluation(**args)
     else:
         dataset_name = dataset.__class__.__name__
         raise NotImplementedError("Unsupported dataset type {}.".format(dataset_name))

@@ -2,7 +2,7 @@
 
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 
-from .reid_dataset import ReIDDataset
+
 
 import logging
 
@@ -22,5 +22,3 @@ def sysu_evaluation(dataset, predictions, output_folder, box_only, **_):
         logger=logger,
     )
 
-
-__all__ = ["ReIDDataset"]

@@ -16,6 +16,7 @@ from maskrcnn_benchmark.utils.collect_env import collect_env_info
 from maskrcnn_benchmark.utils.comm import synchronize, get_rank
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
+from maskrcnn_benchmark.modeling.reid_backbone import build_reid_model
 
 
 def main():
@@ -61,7 +62,12 @@ def main():
     model = build_detection_model(cfg)
     model.to(cfg.MODEL.DEVICE)
 
-    subdir, p = os.path.split(cfg.SUBDIR)
+    # load a reid model
+    reid_model = build_reid_model(cfg)
+    reid_model.load_state_dict(torch.load(cfg.REID.TEST.WEIGHT), strict=False)
+    reid_model.to(cfg.MODEL.DEVICE)
+
+    subdir, model_th = os.path.split(cfg.SUBDIR)
     output_dir = os.path.join(cfg.OUTPUT_DIR, subdir)
     print('Checkpoint dir: {}'.format(output_dir))
 
@@ -70,39 +76,48 @@ def main():
         iou_types = iou_types + ("segm",)
     if cfg.MODEL.KEYPOINT_ON:
         iou_types = iou_types + ("keypoints",)
-    output_folders = [None] * len(cfg.DATASETS.TEST)
+
     dataset_names = cfg.DATASETS.TEST
     if cfg.OUTPUT_DIR:
-        for idx, dataset_name in enumerate(dataset_names):
-            output_folder = os.path.join(output_dir, "inference", dataset_name)
-            mkdir(output_folder)
-            output_folders[idx] = output_folder
+        output_folder = os.path.join(output_dir, "inference", dataset_names[0].split('_')[0])
+        mkdir(output_folder)
+
+
     data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
-
-
     checkpointer = DetectronCheckpointer(cfg, model, save_dir=output_dir)
 
-    for i in range(100):
-        if p == 'None':
-            pmodel = None
-        else:
-            pmodel = os.path.join(output_dir, p[:-11] + str(int(p[-11:-4]) + 2500*i).zfill(7) + '.pth')
-        _ = checkpointer.load(cfg.MODEL.WEIGHT, pmodel)
-
-        for output_folder, dataset_name, data_loader_val in zip(output_folders, dataset_names, data_loaders_val):
+    if cfg.CIRCLE:
+        for i in range(100):
+            pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 2500 * i).zfill(7) + '.pth')
+            _ = checkpointer.load(pmodel)
             inference(
+                reid_model,
                 model,
-                data_loader_val,
-                dataset_name=dataset_name,
+                data_loaders_val,
+                dataset_name=dataset_names[0].split('_')[0],
                 iou_types=iou_types,
                 box_only=False if cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
                 device=cfg.MODEL.DEVICE,
                 expected_results=cfg.TEST.EXPECTED_RESULTS,
                 expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
                 output_folder=output_folder,
-            )
+                )
             synchronize()
-
+    else:
+        _ = checkpointer.load(cfg.MODEL.WEIGHT)
+        inference(
+            reid_model,
+            model,
+            data_loaders_val,
+            dataset_name=dataset_names[0].split('_')[0],
+            iou_types=iou_types,
+            box_only=False if cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
+            device=cfg.MODEL.DEVICE,
+            expected_results=cfg.TEST.EXPECTED_RESULTS,
+            expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
+            output_folder=output_folder,
+        )
+        synchronize()
 
 if __name__ == "__main__":
     main()

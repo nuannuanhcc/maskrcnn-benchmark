@@ -22,6 +22,11 @@ class DatasetCatalog(object):
             "sysu/annotations/test.json",
             "test",
         ),
+        "sysu_query": (
+            "sysu/test",
+            "sysu/annotations/query.json",
+            "query",
+        ),
         "prw_train": (
             "prw/train",
             "prw/annotations/train.json",
@@ -36,6 +41,11 @@ class DatasetCatalog(object):
             "prw/test",
             "prw/annotations/test.json",
             "test",
+        ),
+        "prw_query": (
+            "prw/test",
+            "prw/annotations/query.json",
+            "query",
         ),
         "coco_2017_train": {
             "img_dir": "coco/train2017",

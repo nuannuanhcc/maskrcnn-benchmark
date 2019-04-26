@@ -247,7 +247,7 @@ class COCODemo(object):
         Simple function that adds fixed colors depending on the class
         """
         colors = labels[:, None] * self.palette
-        colors = (colors % 255).numpy().astype("uint8")
+        colors = (colors % 255).cpu().numpy().astype("uint8")
         return colors
 
     def overlay_boxes(self, image, predictions):
@@ -259,12 +259,13 @@ class COCODemo(object):
             predictions (BoxList): the result of the computation by the model.
                 It should contain the field `labels`.
         """
-        labels = predictions.get_field("labels")
-        boxes = predictions.bbox
+        labels = predictions.get_field("labels").cpu()
+        boxes = predictions.bbox.cpu()
 
         colors = self.compute_colors_for_labels(labels).tolist()
 
         for box, color in zip(boxes, colors):
+            image = image.copy()
             box = box.to(torch.int64)
             top_left, bottom_right = box[:2].tolist(), box[2:].tolist()
             image = cv2.rectangle(
@@ -283,11 +284,9 @@ class COCODemo(object):
             predictions (BoxList): the result of the computation by the model.
                 It should contain the field `mask` and `labels`.
         """
-        masks = predictions.get_field("mask").numpy()
-        labels = predictions.get_field("labels")
-
+        masks = predictions.get_field("mask").cpu().numpy()
+        labels = predictions.get_field("labels").cpu()
         colors = self.compute_colors_for_labels(labels).tolist()
-
         for mask, color in zip(masks, colors):
             thresh = mask[0, :, :, None]
             contours, hierarchy = cv2_util.findContours(
@@ -342,7 +341,7 @@ class COCODemo(object):
                 start_x = x * width
                 end_x = (x + 1) * width
                 result[start_y:end_y, start_x:end_x] = masks[y, x]
-        return cv2.applyColorMap(result.numpy(), cv2.COLORMAP_JET)
+        return cv2.applyColorMap(result.cpu().numpy(), cv2.COLORMAP_JET)
 
     def overlay_class_names(self, image, predictions):
         """

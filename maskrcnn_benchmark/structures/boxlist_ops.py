@@ -96,6 +96,8 @@ def _cat(tensors, dim=0):
     assert isinstance(tensors, (list, tuple))
     if len(tensors) == 1:
         return tensors[0]
+    if tensors[0].shape == torch.Size([]):
+        tensors = [torch.tensor([i]) for i in tensors]
     return torch.cat(tensors, dim)
 
 

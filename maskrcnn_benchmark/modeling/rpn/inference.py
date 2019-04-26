@@ -144,6 +144,7 @@ class RPNPostProcessor(torch.nn.Module):
             boxlists = self.select_over_all_levels(boxlists)
 
         # append ground-truth bboxes to proposals
+        targets = None  # don't add gt
         if self.training and targets is not None:
             boxlists = self.add_gt_proposals(boxlists, targets)
 
