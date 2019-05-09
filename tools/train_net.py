@@ -26,6 +26,13 @@ from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
 from maskrcnn_benchmark.modeling.reid_backbone import build_reid_model
 
+try:
+    from apex.parallel import DistributedDataParallel as DDP
+    from apex.fp16_utils import *
+    from apex import amp, optimizers
+    from apex.multi_tensor_apply import multi_tensor_applier
+except ImportError:
+    raise ImportError("Please install apex from https://www.github.com/nvidia/apex to run this example.")
 
 def train(cfg, local_rank, distributed):
     model = build_detection_model(cfg)
@@ -40,12 +47,18 @@ def train(cfg, local_rank, distributed):
     optimizer = make_optimizer(cfg, model)
     scheduler = make_lr_scheduler(cfg, optimizer)
 
+    # model, optimizer = amp.initialize(model, optimizer,
+    #                                   opt_level="O0"
+    #                                   )
+
     if distributed:
-        model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=[local_rank], output_device=local_rank,
-            # this should be removed if we update BatchNorm stats
-            broadcast_buffers=False,
-        )
+        model = DDP(model, delay_allreduce=True)
+        # model = torch.nn.parallel.DistributedDataParallel(
+        #     model, device_ids=[local_rank], output_device=local_rank,
+        #     # this should be removed if we update BatchNorm stats
+        #     broadcast_buffers=False,
+        # )
+
 
     arguments = {}
     arguments["iteration"] = 0
@@ -144,6 +157,17 @@ def main():
     )
 
     args = parser.parse_args()
+
+    import random
+    import torch.backends.cudnn as cudnn
+    import numpy as np
+    seed = 1
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed + 1)
+    random.seed(seed + 2)
+    np.random.seed(seed + 3)
+    print('use seed')
+    cudnn.deterministic = True
 
     num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     args.distributed = num_gpus > 1

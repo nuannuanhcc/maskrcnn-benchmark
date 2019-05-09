@@ -9,6 +9,13 @@ import torch.distributed as dist
 from maskrcnn_benchmark.utils.comm import get_world_size
 from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 from maskrcnn_benchmark.structures.image_list import resize_to_image
+try:
+    from apex.parallel import DistributedDataParallel as DDP
+    from apex.fp16_utils import *
+    from apex import amp, optimizers
+    from apex.multi_tensor_apply import multi_tensor_applier
+except ImportError:
+    raise ImportError("Please install apex from https://www.github.com/nvidia/apex to run this example.")
 
 
 def reduce_loss_dict(loss_dict):
@@ -68,23 +75,24 @@ def do_train(
         result, loss_dict = model(images, targets)
         images_reid, labels_reid = resize_to_image(images.tensors, targets, result)
         if images_reid is None:
-            reid_loss_dict = {}  # no distributed
-            print(iteration)
-            # continue # distributed
+            # pass
+            loss_dict.update(dict(cls_loss=torch.tensor(0).type_as(loss_dict['loss_classifier'])))
+            loss_dict.update(dict(tri_loss=torch.tensor(0).type_as(loss_dict['loss_classifier'])))
         else:
             images_reid = [o.to(device) for o in images_reid]
             labels_reid = labels_reid.to(device)
-            reid_loss_dict = reid_model(images_reid, labels_reid, iteration, 'train')
+            loss_dict = reid_model(images_reid, labels_reid, iteration, 'train', loss_dict)
 
-        losses = sum(loss for loss in loss_dict.values()) + sum(loss for loss in reid_loss_dict.values())
+        losses = sum(loss for loss in loss_dict.values())
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = reduce_loss_dict(loss_dict)
-        loss_dict_reduced.update(reduce_loss_dict(reid_loss_dict))
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
         meters.update(loss=losses_reduced, **loss_dict_reduced)
 
         optimizer.zero_grad()
+        # with amp.scale_loss(losses, optimizer) as scaled_loss:
+        #     scaled_loss.backward()
         losses.backward()
         optimizer.step()
 

@@ -37,6 +37,17 @@ def main():
 
     args = parser.parse_args()
 
+    import random
+    import torch.backends.cudnn as cudnn
+    import numpy as np
+    seed = 1
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed + 1)
+    random.seed(seed + 2)
+    np.random.seed(seed + 3)
+    print('use seed')
+    cudnn.deterministic = True
+
     num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     distributed = num_gpus > 1
 
@@ -88,7 +99,8 @@ def main():
 
     if cfg.CIRCLE:
         for i in range(100):
-            pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 2500 * i).zfill(7) + '.pth')
+            # pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 2500 * i).zfill(7) + '.pth')
+            pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 1500 * i).zfill(7) + '.pth')
             _ = checkpointer.load(pmodel)
             inference(
                 reid_model,

@@ -68,7 +68,7 @@ class REID_Baseline(nn.Module):
         self.register_buffer('lut2', torch.zeros(self.num_classes, self.reid_feat_dim).cuda())
         self.register_buffer('queue', torch.zeros(self.queue_size, self.reid_feat_dim).cuda())
 
-    def forward(self, img_list, pid_label, iteration, mode):
+    def forward(self, img_list, pid_label, iteration, mode, loss_dict=None):
         feats = []
         feat = 0
         for x in img_list:
@@ -79,17 +79,17 @@ class REID_Baseline(nn.Module):
             feat += 1 / len(feats) * i
         if mode == 'test' or mode == 'query':
             return feat
-        losses = {}
+
         labels = pid_label.type(torch.cuda.LongTensor)
         if 'softmax' in cfg.REID.DATALOADER.SAMPLER:
             cls_score = self.classifier(feat)
             cls_loss = F.cross_entropy(cls_score, labels)
-            losses.update(dict(cls_loss=cls_loss))
+            loss_dict.update(dict(cls_loss=cls_loss))
         if 'triplet' in cfg.REID.DATALOADER.SAMPLER:
             tri_loss = triplet_loss(global_feat, pid_label, self.lut1, self.lut2, self.queue, self.lut_momentum,
                                     iteration, self.margin)
-            losses.update(dict(tri_loss=tri_loss))
-        return losses
+            loss_dict.update(dict(tri_loss=tri_loss))
+        return loss_dict
 
 
 

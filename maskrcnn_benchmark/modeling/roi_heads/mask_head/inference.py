@@ -49,6 +49,11 @@ class MaskPostProcessor(nn.Module):
         mask_prob = mask_prob.split(boxes_per_image, dim=0)
 
         if self.masker:
+            # height, width = images.tensors.shape[-2:]
+            # boxes_init = []
+            # for i in boxes:
+            #     boxes_init.append(i.resize((width, height)))
+            # mask_prob = self.masker(mask_prob, boxes_init)
             mask_prob = self.masker(mask_prob, boxes)
 
         results = []
@@ -138,13 +143,15 @@ def paste_mask_in_image(mask, box, im_h, im_w, thresh=0.5, padding=1):
 
     if thresh >= 0:
         mask = mask > thresh
+        im_mask = torch.zeros((im_h, im_w), dtype=torch.uint8)
     else:
         mask = mask
+        im_mask = torch.zeros((im_h, im_w), dtype=torch.float32)
         # for visualization and debugging, we also
         # allow it to return an unmodified mask
         # mask = (mask * 255).to(torch.uint8)
 
-    im_mask = torch.zeros((im_h, im_w), dtype=torch.float32)
+
     x_0 = max(box[0], 0)
     x_1 = min(box[2] + 1, im_w)
     y_0 = max(box[1], 0)
