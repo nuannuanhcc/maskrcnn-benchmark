@@ -17,7 +17,7 @@ from maskrcnn_benchmark.utils.comm import synchronize, get_rank
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
 from maskrcnn_benchmark.modeling.reid_backbone import build_reid_model
-
+from maskrcnn_benchmark.utils.model_serialization import load_state_dict
 
 def main():
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Inference")
@@ -75,8 +75,14 @@ def main():
 
     # load a reid model
     reid_model = build_reid_model(cfg)
-    reid_model.load_state_dict(torch.load(cfg.REID.TEST.WEIGHT), strict=False)
     reid_model.to(cfg.MODEL.DEVICE)
+    print('#######loading from {}#######'.format(cfg.REID.TEST.WEIGHT))
+    f = torch.load(cfg.REID.TEST.WEIGHT, map_location=torch.device("cpu"), )
+    if 'model' in f:
+        load_state_dict(reid_model, f['model'])
+    else:
+        reid_model.load_state_dict(f, strict=False)
+
 
     subdir, model_th = os.path.split(cfg.SUBDIR)
     output_dir = os.path.join(cfg.OUTPUT_DIR, subdir)

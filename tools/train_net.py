@@ -25,7 +25,7 @@ from maskrcnn_benchmark.utils.imports import import_file
 from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
 from maskrcnn_benchmark.modeling.reid_backbone import build_reid_model
-
+from maskrcnn_benchmark.utils.model_serialization import load_state_dict
 try:
     from apex.parallel import DistributedDataParallel as DDP
     from apex.fp16_utils import *
@@ -41,8 +41,13 @@ def train(cfg, local_rank, distributed):
 
     # load a reid model
     reid_model = build_reid_model(cfg)
-    reid_model.load_state_dict(torch.load(cfg.REID.TEST.WEIGHT), strict=False)
     reid_model.to(device)
+    print('#######loading from {}#######'.format(cfg.REID.TEST.WEIGHT))
+    f = torch.load(cfg.REID.TEST.WEIGHT, map_location=torch.device("cpu"), )
+    if 'model' in f:
+        load_state_dict(reid_model, f['model'])
+    else:
+        reid_model.load_state_dict(f, strict=False)
 
     optimizer = make_optimizer(cfg, model)
     scheduler = make_lr_scheduler(cfg, optimizer)

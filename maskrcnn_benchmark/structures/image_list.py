@@ -176,11 +176,11 @@ def resize_to_image(images, targets, results):
     reid_images = []
     reid_labels = []
     reid_masks = []
-    # image_masks = []
-    # target_images = []
+    image_masks = []
+    target_images = []
     outputs = []
     for image, target, result in zip(images, targets, results):
-        # t_list = []
+        t_list = []
         result_list = []
         for i in range(target.bbox.shape[0]):
             if target.extra_fields['pid'][i] < 0:
@@ -195,7 +195,7 @@ def resize_to_image(images, targets, results):
             if len(result.bbox) == 0:
                 print('###### there is no predict_box #####', target.extra_fields['pid'])
                 continue
-            # t_list.append(target.bbox[i].unsqueeze(0))
+            t_list.append(target.bbox[i].unsqueeze(0))
             idx = iou_max(result.bbox, target.bbox[i])
             result_idx = result.get_items(range(idx, idx + 1))
             result_idx.extra_fields['pid'] = torch.tensor([target.extra_fields['pid'][i]])
@@ -205,21 +205,22 @@ def resize_to_image(images, targets, results):
         result_list = cat_boxlist(result_list)
         reid_image = stn(image, result_list.bbox)
         reid_images.append(reid_image)
-        # target_images.append(stn(image, torch.cat(t_list)))
+        target_images.append(stn(image, torch.cat(t_list)))
         reid_labels.append(result_list.extra_fields['pid'])
         if cfg.MODEL.MASK_ON:
             images_mask_reid, image_mask = mask_compute(result_list, image, reid_image)
             del result_list.extra_fields['mask']
             reid_masks.append(images_mask_reid)
-            # image_masks.append(image_mask)
-    if reid_images == []:
-        print('######### wrong ################')
-        return None, None
+            image_masks.append(image_mask)
+    # if reid_images == []:
+    #     print('######### wrong ################')
+    #     return None, None
     outputs.append(torch.cat(reid_images))
     if cfg.MODEL.MASK_ON:
         outputs.append(torch.cat(reid_masks))
-
-    # save_imgs(outputs, iteration, target_images, image_masks)
+    from IPython import embed
+    embed()
+    # save_imgs(outputs, 1, target_images, image_masks)
     return outputs, torch.cat(reid_labels)
 
 
@@ -294,33 +295,33 @@ def resize_to_image_test(images, results, target, mode):
             # save_imgs(output, iteration, [target_images], [image_mask])
     return output, results
 
-# def save_imgs(outputs, iteration, target_images, image_masks):
-#     from torchvision import transforms
-#     import matplotlib
-#     matplotlib.use('AGG')
-#     import matplotlib.pyplot as plt
-#     for i in range(outputs[0].shape[0]):
-#         mean = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32)
-#         std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32)
-#         img = outputs[0][i].cpu()
-#         img = img.mul_(std[:, None, None]).add_(mean[:, None, None])
-#         img = transforms.ToPILImage()(img).convert('RGB')
-#         name = str(iteration) + '_' + str(i)+'.jpg'
-#         img.save('/unsullied/sharefs/hanchuchu/isilon-home/image/test/'+str(name))
-#
-#         timg = torch.cat(target_images)[i].cpu()
-#         timg = timg.mul_(std[:, None, None]).add_(mean[:, None, None])
-#         timg = transforms.ToPILImage()(timg).convert('RGB')
-#         tname = str(iteration) + '_' + str(i)+'t.jpg'
-#         timg.save('/unsullied/sharefs/hanchuchu/isilon-home/image/test/'+str(tname))
-#
-#         mimg = torch.cat(image_masks)[i].cpu()
-#         mask = torch.mean(mimg, dim=0).cpu().detach().numpy()
-#         # fig = plt.figure(0)
-#         plt.imshow(img)
-#         plt.imshow(mask, alpha=0.5, cmap='viridis')
-#         mname = str(iteration) + '_' + str(i) + 'm.jpg'
-#         plt.savefig('/unsullied/sharefs/hanchuchu/isilon-home/image/test/'+str(mname))
+def save_imgs(outputs, iteration, target_images, image_masks):
+    from torchvision import transforms
+    import matplotlib
+    matplotlib.use('AGG')
+    import matplotlib.pyplot as plt
+    for i in range(outputs[0].shape[0]):
+        mean = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32)
+        std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32)
+        img = outputs[0][i].cpu()
+        img = img.mul_(std[:, None, None]).add_(mean[:, None, None])
+        img = transforms.ToPILImage()(img).convert('RGB')
+        name = str(iteration) + '_' + str(i)+'.jpg'
+        img.save('/unsullied/sharefs/hanchuchu/isilon-home/image/test/'+str(name))
+
+        timg = torch.cat(target_images)[i].cpu()
+        timg = timg.mul_(std[:, None, None]).add_(mean[:, None, None])
+        timg = transforms.ToPILImage()(timg).convert('RGB')
+        tname = str(iteration) + '_' + str(i)+'t.jpg'
+        timg.save('/unsullied/sharefs/hanchuchu/isilon-home/image/test/'+str(tname))
+
+        mimg = torch.cat(image_masks)[i].cpu()
+        mask = torch.mean(mimg, dim=0).cpu().detach().numpy()
+        # fig = plt.figure(0)
+        plt.imshow(img)
+        plt.imshow(mask, alpha=0.5, cmap='viridis')
+        mname = str(iteration) + '_' + str(i) + 'm.jpg'
+        plt.savefig('/unsullied/sharefs/hanchuchu/isilon-home/image/test/'+str(mname))
 
 # def draw_reid_mask(images_reid, masks_reid):
 #     # input

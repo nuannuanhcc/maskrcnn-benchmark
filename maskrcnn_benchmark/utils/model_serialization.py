@@ -41,21 +41,22 @@ def align_and_update_state_dicts(model_state_dict, loaded_state_dict):
     max_size_loaded = max([len(key) for key in loaded_keys]) if loaded_keys else 1
     log_str_template = "{: <{}} loaded from {: <{}} of shape {}"
     logger = logging.getLogger(__name__)
+
     for idx_new, idx_old in enumerate(idxs.tolist()):
         if idx_old == -1:
             continue
         key = current_keys[idx_new]
         key_old = loaded_keys[idx_old]
         model_state_dict[key] = loaded_state_dict[key_old]
-        logger.info(
-            log_str_template.format(
-                key,
-                max_size,
-                key_old,
-                max_size_loaded,
-                tuple(loaded_state_dict[key_old].shape),
-            )
-        )
+        # logger.info(
+        #     log_str_template.format(
+        #         key,
+        #         max_size,
+        #         key_old,
+        #         max_size_loaded,
+        #         tuple(loaded_state_dict[key_old].shape),
+        #     )
+        # )
 
 
 def strip_prefix_if_present(state_dict, prefix):
