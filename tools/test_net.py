@@ -106,7 +106,7 @@ def main():
     if cfg.CIRCLE:
         for i in range(100):
             # pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 2500 * i).zfill(7) + '.pth')
-            pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 1500 * i).zfill(7) + '.pth')
+            pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 1000 * i).zfill(7) + '.pth')
             _ = checkpointer.load(pmodel)
             inference(
                 reid_model,
