@@ -26,11 +26,11 @@ class SYSUDataset(torch.utils.data.Dataset):
         self.split = split
         self.transforms = transforms
 
-        self.anno_dir = '/home/hanchuchu/maskrcnn-benchmark/datasets/sysu/annotations'
-        self.train_DF = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/trainAllDF.csv'
-        self.test_DF = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/testAllDF.csv'
-        self.query_DF = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/queryDF.csv'
-        self.gallery = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/q_to_g{}DF.csv'.format(self.gallery_size)
+        self.anno_dir = '/data/hanchuchu/datasets/person_search/coco_format_sysu/annotations'
+        self.train_DF = '/data/hanchuchu/datasets/person_search/coco_format_sysu/SIPN_annotation/trainAllDF.csv'
+        self.test_DF = '/data/hanchuchu/datasets/person_search/coco_format_sysu/SIPN_annotation/testAllDF.csv'
+        self.query_DF = '/data/hanchuchu/datasets/person_search/coco_format_sysu/SIPN_annotation/queryDF.csv'
+        self.gallery = '/data/hanchuchu/datasets/person_search/coco_format_sysu/SIPN_annotation/q_to_g{}DF.csv'.format(self.gallery_size)
         self.demo = False
         if self.demo:
             self.pid = 'pid_0.csv'

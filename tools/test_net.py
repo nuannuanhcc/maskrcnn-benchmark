@@ -76,7 +76,7 @@ def main():
     # load a reid model
     reid_model = build_reid_model(cfg)
     reid_model.to(cfg.MODEL.DEVICE)
-    print('#######loading from {}#######'.format(cfg.REID.TEST.WEIGHT))
+    print('#######loading reid model from {}#######'.format(cfg.REID.TEST.WEIGHT))
     f = torch.load(cfg.REID.TEST.WEIGHT, map_location=torch.device("cpu"), )
     if 'model' in f:
         load_state_dict(reid_model, f['model'])
@@ -84,9 +84,9 @@ def main():
         reid_model.load_state_dict(f, strict=False)
 
 
-    subdir, model_th = os.path.split(cfg.SUBDIR)
-    output_dir = os.path.join(cfg.OUTPUT_DIR, subdir)
-    print('Checkpoint dir: {}'.format(output_dir))
+    output_dir = os.path.join(cfg.OUTPUT_DIR, cfg.SUBDIR)
+
+    print('Output dir: {}'.format(output_dir))
 
     iou_types = ("bbox",)
     if cfg.MODEL.MASK_ON:
@@ -103,39 +103,23 @@ def main():
     data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
     checkpointer = DetectronCheckpointer(cfg, model, save_dir=output_dir)
 
-    if cfg.CIRCLE:
-        for i in range(100):
-            # pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 2500 * i).zfill(7) + '.pth')
-            pmodel = os.path.join(output_dir, model_th[:-11] + str(int(model_th[-11:-4]) + 1000 * i).zfill(7) + '.pth')
-            _ = checkpointer.load(pmodel)
-            inference(
-                reid_model,
-                model,
-                data_loaders_val,
-                dataset_name=dataset_names[0].split('_')[0],
-                iou_types=iou_types,
-                box_only=False if cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
-                device=cfg.MODEL.DEVICE,
-                expected_results=cfg.TEST.EXPECTED_RESULTS,
-                expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
-                output_folder=output_folder,
-                )
-            synchronize()
-    else:
-        _ = checkpointer.load(cfg.MODEL.WEIGHT)
-        inference(
-            reid_model,
-            model,
-            data_loaders_val,
-            dataset_name=dataset_names[0].split('_')[0],
-            iou_types=iou_types,
-            box_only=False if cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
-            device=cfg.MODEL.DEVICE,
-            expected_results=cfg.TEST.EXPECTED_RESULTS,
-            expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
-            output_folder=output_folder,
-        )
-        synchronize()
+
+    _ = checkpointer.load(cfg.MODEL.WEIGHT)
+    print('#######loading detector from {}#######'.format(cfg.MODEL.WEIGHT))
+
+    inference(
+        reid_model,
+        model,
+        data_loaders_val,
+        dataset_name=dataset_names[0].split('_')[0],
+        iou_types=iou_types,
+        box_only=False if cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
+        device=cfg.MODEL.DEVICE,
+        expected_results=cfg.TEST.EXPECTED_RESULTS,
+        expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
+        output_folder=output_folder,
+    )
+    synchronize()
 
 if __name__ == "__main__":
     main()

@@ -3,10 +3,8 @@
 #rlaunch --cpu=1 --gpu=1 --memory=$((1024*10)) --preemptible=no --positive-tags=1080ti --max-wait-time 5h -- \
 
 python ./tools/test_net.py --config-file configs/sysu_faster_R_50_FPN.yaml \
- SUBDIR '6.21_detector/GPU1_LR0.0025/model_0001000.pth' \
- MODEL.WEIGHT "" \
- CIRCLE True \
- REID.TEST.WEIGHT "/unsullied/sharefs/hanchuchu/isilon-home/train_log/mask/resnet50_model_150.pth"
+ SUBDIR '10.10_detector' \
+ MODEL.WEIGHT "/data/hanchuchu/datasets/person_search/trained_model/detection_123-GPU4_LR0.0025-model_0020000.pth"
 
 
 # 'mask/model_0072500.pth'

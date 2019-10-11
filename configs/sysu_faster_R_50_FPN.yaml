@@ -38,11 +38,12 @@ SOLVER:
   BASE_LR: 0.01
   STEPS: (0, 15000, 20000)
   MAX_ITER: 30000
+OUTPUT_DIR: "/data/hanchuchu/train_log"
 
 # config of reid model
 REID:
   MODEL:
-    PRETRAIN_PATH: '/home/hanchuchu/.torch/models/resnet50-19c8e357.pth'
+    PRETRAIN_PATH: "/data/hanchuchu/datasets/person_search/trained_model/resnet50-19c8e357.pth"
   INPUT:
     SIZE_TRAIN: [384, 128]
     SIZE_TEST: [384, 128]
@@ -75,8 +76,8 @@ REID:
   TEST:
     IMS_PER_BATCH: 256
     GALLERY_SIZE: 100
-    WEIGHT: "/unsullied/sharefs/hanchuchu/isilon-home/train_log/mask/resnet50_model_150.pth"
-  OUTPUT_DIR: "/unsullied/sharefs/hanchuchu/isilon-home/train_log/hccc"
+    WEIGHT: "/data/hanchuchu/datasets/person_search/trained_model/resnet50_model_150.pth"
+
 
 
 

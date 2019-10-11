@@ -243,7 +243,7 @@ def calc_reid_sysu_topk(test_img_list, query_img_list, query_boxlists, pred_boxl
     logger.info("Detection iou_thresh: {}".format(iou_thresh))
 
     ############################# path #############################
-    annotation_dir = '/unsullied/sharefs/_research_video/VideoData/users/yejiacheng/pytorch/dataset/person_search/SYSU/SIPN_annotation/'
+    annotation_dir = '/data/hanchuchu/datasets/person_search/coco_format_sysu/SIPN_annotation/'
 
     test_all_file = 'testAllDF.csv'
     query_file = 'queryDF.csv'

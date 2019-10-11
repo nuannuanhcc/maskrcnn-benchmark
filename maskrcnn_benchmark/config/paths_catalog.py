@@ -8,22 +8,22 @@ class DatasetCatalog(object):
     DATA_DIR = "datasets"
     DATASETS = {
         "sysu_train": (
-            "sysu/train",
+            "sysu/images",
             "sysu/annotations/train.json",
             "train",
         ),
         "sysu_val": (
-            "sysu/val",
+            "sysu/images",
             "sysu/annotations/val.json",
             "val",
         ),
         "sysu_test": (
-            "sysu/test",
+            "sysu/images",
             "sysu/annotations/test.json",
             "test",
         ),
         "sysu_query": (
-            "sysu/test",
+            "sysu/images",
             "sysu/annotations/query.json",
             "query",
         ),

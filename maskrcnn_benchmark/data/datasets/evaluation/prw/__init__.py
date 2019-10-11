@@ -6,7 +6,7 @@
 #from .sysu import SYSUDataset ###
 #from .voc import PascalVOCDataset ###
 
-from .reid_dataset import PReIDDataset
+
 
 import logging
 
